@@ -1,4 +1,4 @@
-"""Zentrale Einstellungen fuer die Video-Pipeline."""
+# Zentrale Einstellungen fuer die Video-Pipeline
 
 from pathlib import Path
 
@@ -8,23 +8,23 @@ TEMP_DIR = BASE_DIR / "temp"
 OUTPUT_DIR = BASE_DIR / "output"
 
 # --- Story-Generierung -------------------------------------------------
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-120b"
 
-LANGUAGE = "de"
+LANGUAGE = "en"
 
 TOPICS = [
-    "ein überraschender Fakt aus der Wissenschaft",
-    "ein unheimlicher historischer Fakt",
-    "ein kurioser Fakt über Tiere",
-    "eine gruselige Kurzgeschichte mit Wendung",
-    "ein unglaublicher Fakt über das Weltall",
-    "ein verstörender Fakt über den menschlichen Körper",
+    "a surprising fact from science",
+    "a creepy historical fact",
+    "a curious fact about animals",
+    "a creepy short story with a twist",
+    "an incredible fact about the universe",
+    "a disturbing fact about the human body",
 ]
 
 TARGET_WORDS = 110
 
 # --- Sprachausgabe -----------------------------------------------------
-VOICE = "de-DE-ConradNeural"
+VOICE = "en-CA-LiamNeural"
 VOICE_RATE = "+18%"
 VOICE_PITCH = "+0Hz"
 
