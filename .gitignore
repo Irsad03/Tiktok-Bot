@@ -220,3 +220,10 @@ __marimo__/
 .idea
 .env
 requirements.txt
+tiktok_tokens.json
+
+# Projekt-eigene generierte/lokale Inhalte
+output/
+temp/
+clips/
+*TEMP_MPY*.mp4

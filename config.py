@@ -21,7 +21,8 @@ TOPICS = [
     "a disturbing fact about the human body",
 ]
 
-TARGET_WORDS = 110
+TARGET_WORDS_MIN = 150
+TARGET_WORDS_MAX = 300
 
 # --- Sprachausgabe -----------------------------------------------------
 VOICE = "en-CA-LiamNeural"
@@ -44,3 +45,17 @@ FONT_PATH = "C:/Windows/Fonts/arialbd.ttf"
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
+
+# --- TikTok-Veröffentlichung --------------------------------------------
+# Client Key/Secret kommen von der App im TikTok for Developers Portal
+# (https://developers.tiktok.com) und stehen als TIKTOK_CLIENT_KEY /
+# TIKTOK_CLIENT_SECRET in der .env-Datei.
+AUTO_POST_TIKTOK = True
+# TikTok lehnt localhost/127.0.0.1 als Redirect-URI ab, deshalb wird eine
+# echte HTTPS-URL verwendet; der Code wird nach der Weiterleitung manuell
+# aus der Adresszeile kopiert (siehe tiktok_auth.py).
+TIKTOK_REDIRECT_URI = "https://github.com/Irsad03"
+TIKTOK_SCOPES = "user.info.basic,video.publish"
+# Solange die App noch nicht von TikTok auditiert wurde, sind nur private
+# Posts möglich. Nach dem Audit kann hier z.B. "PUBLIC_TO_EVERYONE" stehen.
+TIKTOK_PRIVACY_LEVEL = "SELF_ONLY"

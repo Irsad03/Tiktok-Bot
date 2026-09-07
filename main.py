@@ -15,16 +15,22 @@ import speech
 import story
 import video
 
+if config.AUTO_POST_TIKTOK:
+    import tiktok
+
 
 def make_one(topic: str | None = None) -> None:
     text = story.generate_story(topic)
     audio_path = speech.text_to_speech(text)
     groups = captions_mod.build_captions(audio_path)
-    video.build_video(audio_path, groups)
+    video_path = video.build_video(audio_path, groups)
 
     (config.OUTPUT_DIR / "scripts.txt").open("a", encoding="utf-8").write(
         text + "\n\n---\n\n"
     )
+
+    if config.AUTO_POST_TIKTOK:
+        tiktok.publish_video(video_path)
 
 
 def main() -> None:

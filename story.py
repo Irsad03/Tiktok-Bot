@@ -12,17 +12,23 @@ load_dotenv()
 
 
 SYSTEM_PROMPT_DE = (
-    "Du schreibst Texte für kurze TikTok-Videos. "
+    "Du schreibst Texte für kurze TikTok-Videos im Stil typischer Reddit-Storys "
+    "oder TikTok-Storytime-Videos. "
     "Schreibe fesselnd, in einfacher gesprochener Sprache, ohne Emojis, "
     "ohne Hashtags, ohne Überschrift und ohne Formatierung. "
+    "Benutze einfache, alltägliche Wörter und kurze Sätze, keine komplizierten "
+    "Fremdwörter oder Schachtelsätze. "
     "Der erste Satz muss ein starker Hook sein, der zum Weiterschauen zwingt. "
     "Gib ausschliesslich den Sprechtext zurück, sonst nichts."
 )
 
 SYSTEM_PROMPT_EN = (
-    "You write scripts for short TikTok videos. "
+    "You write scripts for short TikTok videos in the style of typical Reddit "
+    "stories or TikTok storytime videos. "
     "Write in an engaging, simple spoken style, no emojis, no hashtags, "
     "no title and no formatting. "
+    "Use simple, everyday words and short sentences, avoid complex vocabulary "
+    "or nested clauses. "
     "The first sentence must be a strong hook. "
     "Return only the spoken text, nothing else."
 )
@@ -40,12 +46,14 @@ def generate_story(topic: str | None = None) -> str:
     if config.LANGUAGE == "de":
         user = (
             f"Thema: {topic}. "
-            f"Schreibe dazu einen Text mit ungefähr {config.TARGET_WORDS} Wörtern."
+            f"Schreibe dazu einen Text mit {config.TARGET_WORDS_MIN} bis "
+            f"{config.TARGET_WORDS_MAX} Wörtern."
         )
     else:
         user = (
             f"Topic: {topic}. "
-            f"Write a script of roughly {config.TARGET_WORDS} words."
+            f"Write a script between {config.TARGET_WORDS_MIN} and "
+            f"{config.TARGET_WORDS_MAX} words."
         )
 
     client = Groq(api_key=api_key)
