@@ -19,7 +19,7 @@ async def _synthesize(text: str, out_path: Path) -> None:
 
 
 def text_to_speech(text: str, out_path: Path | None = None) -> Path:
-    # Erzeugt eine MP3-Datei aus dem Text und gibt den Pfad zurueck.
+    # Erzeugt eine MP3-Datei aus dem Text und gibt den Pfad zurück.
     out_path = out_path or (config.TEMP_DIR / "voice.mp3")
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -29,7 +29,7 @@ def text_to_speech(text: str, out_path: Path | None = None) -> Path:
 
 
 def list_voices(prefix: str = "de-") -> None:
-    # Hilfsfunktion: verfuegbare Stimmen anzeigen.
+    # Hilfsfunktion: verfügbare Stimmen anzeigen.
 
     async def _run():
         voices = await edge_tts.list_voices()

@@ -1,4 +1,4 @@
-# Zentrale Einstellungen fuer die Video-Pipeline
+# Zentrale Einstellungen für die Video-Pipeline
 
 from pathlib import Path
 
