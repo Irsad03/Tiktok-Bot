@@ -55,7 +55,12 @@ AUTO_POST_TIKTOK = True
 # echte HTTPS-URL verwendet; der Code wird nach der Weiterleitung manuell
 # aus der Adresszeile kopiert (siehe tiktok_auth.py).
 TIKTOK_REDIRECT_URI = "https://github.com/Irsad03"
-TIKTOK_SCOPES = "user.info.basic,video.publish"
-# Solange die App noch nicht von TikTok auditiert wurde, sind nur private
-# Posts möglich. Nach dem Audit kann hier z.B. "PUBLIC_TO_EVERYONE" stehen.
+TIKTOK_SCOPES = "user.info.basic,video.publish,video.upload"
+# "INBOX": Video landet als Entwurf in der TikTok-Inbox, du postest manuell
+#          in der App (Account darf öffentlich sein, kein Audit nötig).
+# "DIRECT": Video wird direkt veröffentlicht. Solange die App nicht von
+#          TikTok auditiert wurde, muss der Account dafür privat sein.
+TIKTOK_POST_MODE = "INBOX"
+# Nur relevant für TIKTOK_POST_MODE = "DIRECT". Nach dem Audit kann hier
+# z.B. "PUBLIC_TO_EVERYONE" stehen.
 TIKTOK_PRIVACY_LEVEL = "SELF_ONLY"

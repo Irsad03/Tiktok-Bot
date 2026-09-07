@@ -17,10 +17,11 @@ load_dotenv()
 
 TOKEN_FILE = config.BASE_DIR / "tiktok_tokens.json"
 TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/"
-INIT_URL = "https://open.tiktokapis.com/v2/post/publish/video/init/"
+DIRECT_POST_INIT_URL = "https://open.tiktokapis.com/v2/post/publish/video/init/"
+INBOX_INIT_URL = "https://open.tiktokapis.com/v2/post/publish/inbox/video/init/"
 STATUS_URL = "https://open.tiktokapis.com/v2/post/publish/status/fetch/"
 
-CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB, siehe TikTok-Vorgaben für FILE_UPLOAD
+MAX_SINGLE_CHUNK_SIZE = 64 * 1024 * 1024  # TikTok-Limit für Upload in einem Stück
 
 
 def _load_tokens() -> dict:
@@ -75,7 +76,7 @@ def _wait_for_publish(access_token: str, publish_id: str, timeout: int = 120) ->
         response.raise_for_status()
         status = response.json()["data"]["status"]
         print(f"[tiktok] Status: {status}")
-        if status in ("PUBLISH_COMPLETE", "FAILED"):
+        if status in ("PUBLISH_COMPLETE", "SEND_TO_USER_INBOX", "FAILED"):
             return status
         time.sleep(5)
     return status
@@ -85,29 +86,51 @@ def publish_video(video_path: Path, caption: str = "") -> str:
     # Lädt ein Video hoch und veröffentlicht es auf TikTok. Gibt die publish_id zurück.
     access_token = _get_access_token()
     video_size = video_path.stat().st_size
-    chunk_size = min(CHUNK_SIZE, video_size)
-    total_chunk_count = max(1, -(-video_size // chunk_size))
+    if video_size > MAX_SINGLE_CHUNK_SIZE:
+        raise RuntimeError(
+            f"Video ist {video_size / 1024 / 1024:.1f} MB und damit größer als "
+            f"{MAX_SINGLE_CHUNK_SIZE / 1024 / 1024:.0f} MB. Mehrteiliger Upload ist "
+            "nicht implementiert."
+        )
+    chunk_size = video_size
+    total_chunk_count = 1
 
-    init_response = requests.post(
-        INIT_URL,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json; charset=UTF-8",
-        },
-        json={
+    source_info = {
+        "source": "FILE_UPLOAD",
+        "video_size": video_size,
+        "chunk_size": chunk_size,
+        "total_chunk_count": total_chunk_count,
+    }
+
+    if config.TIKTOK_POST_MODE == "DIRECT":
+        init_url = DIRECT_POST_INIT_URL
+        payload = {
             "post_info": {
                 "title": caption,
                 "privacy_level": config.TIKTOK_PRIVACY_LEVEL,
             },
-            "source_info": {
-                "source": "FILE_UPLOAD",
-                "video_size": video_size,
-                "chunk_size": chunk_size,
-                "total_chunk_count": total_chunk_count,
-            },
+            "source_info": source_info,
+        }
+    else:
+        # TikTok verlangt inzwischen auch im Inbox/Entwurf-Modus ein
+        # privacy_level, sonst bleibt der Post ohne Fehlermeldung für immer
+        # auf PROCESSING_UPLOAD stehen.
+        init_url = INBOX_INIT_URL
+        payload = {
+            "post_info": {"privacy_level": config.TIKTOK_PRIVACY_LEVEL},
+            "source_info": source_info,
+        }
+
+    init_response = requests.post(
+        init_url,
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json; charset=UTF-8",
         },
+        json=payload,
     )
-    init_response.raise_for_status()
+    if not init_response.ok:
+        raise RuntimeError(f"TikTok init fehlgeschlagen ({init_response.status_code}): {init_response.text}")
     init_data = init_response.json()["data"]
     publish_id = init_data["publish_id"]
     upload_url = init_data["upload_url"]
@@ -120,7 +143,8 @@ def publish_video(video_path: Path, caption: str = "") -> str:
         },
         data=video_path.read_bytes(),
     )
-    upload_response.raise_for_status()
+    if not upload_response.ok:
+        raise RuntimeError(f"TikTok Upload fehlgeschlagen ({upload_response.status_code}): {upload_response.text}")
 
     print(f"[tiktok] Hochgeladen, publish_id={publish_id}. Warte auf Status ...")
     status = _wait_for_publish(access_token, publish_id)
