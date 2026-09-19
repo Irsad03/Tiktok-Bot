@@ -103,6 +103,26 @@ def cookie_banner_wegklicken(driver, timeout=5):
     return False
 
 
+def bestaetigungsdialog_wegklicken(driver, timeout=6):
+    """Manche Male fragt TikTok nach einer zusätzlichen Bestätigung
+    ('Jetzt veröffentlichen'). Prüft kurz, ob der Button da ist,
+    und klickt ihn falls vorhanden. Kommt er nicht, wird einfach
+    weitergemacht (kein Fehler)."""
+    try:
+        confirm_button = WebDriverWait(driver, timeout).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, '//button[.//div[contains(text(), "Jetzt veröffentlichen")]]')
+            )
+        )
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", confirm_button)
+        human_move_and_click(driver, confirm_button)
+        print("Bestätigungsdialog erschienen -> 'Jetzt veröffentlichen' geklickt.")
+        return True
+    except Exception:
+        print("Kein Bestätigungsdialog erschienen (übersprungen).")
+        return False
+
+
 options = uc.ChromeOptions()
 options.add_argument("--incognito")
 
@@ -240,6 +260,10 @@ try:
     )
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", post_button)
     human_move_and_click(driver, post_button)
+
+    # Optionaler Bestätigungsdialog ("Jetzt veröffentlichen") — kommt nicht immer
+    time.sleep(random.uniform(0.5, 1.5))
+    bestaetigungsdialog_wegklicken(driver)
 
     print("Warte 60 Sekunden vor dem Schließen des Browsers...")
     time.sleep(60)
