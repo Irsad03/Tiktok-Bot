@@ -154,7 +154,7 @@ try:
     password_field.send_keys(Keys.RETURN)
 
     print("Warte 10 Sekunden nach dem Login...")
-    time.sleep(10)
+    time.sleep(30)
 
     # Falls der Banner erst nach dem Login erscheint, hier sicherheitshalber nochmal prüfen
     cookie_banner_wegklicken(driver)
