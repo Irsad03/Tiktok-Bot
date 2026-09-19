@@ -22,6 +22,7 @@ INBOX_INIT_URL = "https://open.tiktokapis.com/v2/post/publish/inbox/video/init/"
 STATUS_URL = "https://open.tiktokapis.com/v2/post/publish/status/fetch/"
 
 MAX_SINGLE_CHUNK_SIZE = 64 * 1024 * 1024  # TikTok-Limit für Upload in einem Stück
+CHUNK_SIZE = 10 * 1024 * 1024  # Chunkgröße für mehrteiligen Upload (muss zwischen 5-64 MB liegen)
 
 
 def _load_tokens() -> dict:
@@ -86,14 +87,14 @@ def publish_video(video_path: Path, caption: str = "") -> str:
     # Lädt ein Video hoch und veröffentlicht es auf TikTok. Gibt die publish_id zurück.
     access_token = _get_access_token()
     video_size = video_path.stat().st_size
-    if video_size > MAX_SINGLE_CHUNK_SIZE:
-        raise RuntimeError(
-            f"Video ist {video_size / 1024 / 1024:.1f} MB und damit größer als "
-            f"{MAX_SINGLE_CHUNK_SIZE / 1024 / 1024:.0f} MB. Mehrteiliger Upload ist "
-            "nicht implementiert."
-        )
-    chunk_size = video_size
-    total_chunk_count = 1
+    if video_size <= MAX_SINGLE_CHUNK_SIZE:
+        chunk_size = video_size
+        total_chunk_count = 1
+    else:
+        chunk_size = CHUNK_SIZE
+        # TikTok rundet ab; der letzte Chunk nimmt den kompletten Rest auf
+        # (darf laut Doku bis zu 128 MB groß sein).
+        total_chunk_count = video_size // chunk_size
 
     source_info = {
         "source": "FILE_UPLOAD",
@@ -135,16 +136,27 @@ def publish_video(video_path: Path, caption: str = "") -> str:
     publish_id = init_data["publish_id"]
     upload_url = init_data["upload_url"]
 
-    upload_response = requests.put(
-        upload_url,
-        headers={
-            "Content-Type": "video/mp4",
-            "Content-Range": f"bytes 0-{video_size - 1}/{video_size}",
-        },
-        data=video_path.read_bytes(),
-    )
-    if not upload_response.ok:
-        raise RuntimeError(f"TikTok Upload fehlgeschlagen ({upload_response.status_code}): {upload_response.text}")
+    with open(video_path, "rb") as f:
+        for chunk_index in range(total_chunk_count):
+            start = chunk_index * chunk_size
+            is_last = chunk_index == total_chunk_count - 1
+            end = (video_size if is_last else start + chunk_size) - 1
+            chunk_bytes = f.read(end - start + 1)
+
+            upload_response = requests.put(
+                upload_url,
+                headers={
+                    "Content-Type": "video/mp4",
+                    "Content-Range": f"bytes {start}-{end}/{video_size}",
+                },
+                data=chunk_bytes,
+            )
+            if not upload_response.ok:
+                raise RuntimeError(
+                    f"TikTok Upload fehlgeschlagen, Chunk {chunk_index + 1}/{total_chunk_count} "
+                    f"({upload_response.status_code}): {upload_response.text}"
+                )
+            print(f"[tiktok] Chunk {chunk_index + 1}/{total_chunk_count} hochgeladen.")
 
     print(f"[tiktok] Hochgeladen, publish_id={publish_id}. Warte auf Status ...")
     status = _wait_for_publish(access_token, publish_id)

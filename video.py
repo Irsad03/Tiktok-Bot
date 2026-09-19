@@ -65,7 +65,7 @@ def _caption_clip(group: dict) -> TextClip:
     )
 
 
-def build_video(audio_path: Path, captions: list[dict]) -> Path:
+def build_video(audio_path: Path, captions: list[dict], stamp: str | None = None) -> Path:
     # Baut das fertige Video und gibt den Pfad zurück.
     config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -87,7 +87,7 @@ def build_video(audio_path: Path, captions: list[dict]) -> Path:
     final = CompositeVideoClip(layers, size=(config.VIDEO_WIDTH, config.VIDEO_HEIGHT))
     final = final.with_audio(audio).with_duration(duration)
 
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    stamp = stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
     out_path = config.OUTPUT_DIR / f"video-{stamp}.mp4"
 
     final.write_videofile(
