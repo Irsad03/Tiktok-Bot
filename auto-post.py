@@ -153,7 +153,7 @@ try:
     time.sleep(random.uniform(0.3, 0.8))
     password_field.send_keys(Keys.RETURN)
 
-    print("Warte 10 Sekunden nach dem Login...")
+    print("Warte 30 Sekunden nach dem Login...")
     time.sleep(30)
 
     # Falls der Banner erst nach dem Login erscheint, hier sicherheitshalber nochmal prüfen
@@ -241,7 +241,7 @@ try:
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", post_button)
     human_move_and_click(driver, post_button)
 
-    print("Warte 10 Sekunden vor dem Schließen des Browsers...")
+    print("Warte 60 Sekunden vor dem Schließen des Browsers...")
     time.sleep(60)
 
 except Exception:
