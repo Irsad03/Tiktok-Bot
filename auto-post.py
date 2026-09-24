@@ -73,6 +73,34 @@ def human_type(element, text):
         time.sleep(random.uniform(0.05, 0.18))
 
 
+def caption_mit_hashtags_tippen(element, text):
+    """Tippt die Caption. Jeder Hashtag wird komplett getippt
+    (z. B. '#öasdfljk'), danach wird kurz gewartet und Enter gedrückt,
+    damit TikTok den Hashtag übernimmt."""
+    teile = re.split(r"(#\w+)", text)
+    vorher_hashtag = False
+
+    for teil in teile:
+        if not teil:
+            continue
+
+        if teil.startswith("#"):
+            human_type(element, teil)
+            # Warten, bis die Hashtag-Vorschläge erscheinen
+            time.sleep(random.uniform(1.0, 1.8))
+            element.send_keys(Keys.RETURN)
+            time.sleep(random.uniform(0.3, 0.6))
+            vorher_hashtag = True
+        else:
+            # TikTok setzt nach dem übernommenen Hashtag meist selbst ein
+            # Leerzeichen -> führende Leerzeichen weglassen, sonst doppelt
+            if vorher_hashtag:
+                teil = teil.lstrip()
+            if teil:
+                human_type(element, teil)
+            vorher_hashtag = False
+
+
 def cookie_banner_wegklicken(driver, timeout=5):
     """Klickt 'Optionale Cookies ablehnen' im Shadow DOM von <tiktok-cookie-banner>,
     falls der Banner erscheint. Ist er nicht da, wird das ignoriert (kein Abbruch)."""
@@ -248,7 +276,8 @@ try:
     beschreibung_feld.send_keys(Keys.DELETE)
     time.sleep(random.uniform(0.2, 0.4))
 
-    human_type(beschreibung_feld, caption_text)
+    # Caption tippen – nach jedem Hashtag wird Enter gedrückt
+    caption_mit_hashtags_tippen(beschreibung_feld, caption_text)
 
     time.sleep(random.uniform(0.5, 1.0))
 
